@@ -17,10 +17,10 @@ public:
     T* data() {
         return mData;
     }
-    int get_Nx() {
+    int get_Nx() const{
         return Nx;
     }
-    int get_Ny() {
+    int get_Ny() const{
         return Ny;
     }
 };
