@@ -13,8 +13,9 @@ struct walker {
     int x;
     int y;
     bool moved;
+    int index;
 
-    walker(int x, int y): x(x), y(y), moved(false) {};
+    walker(int x, int y, int index): x(x), y(y), index(index), moved(false) {};
     void move(int dx, int dy) {
         x += dx;
         y += dy;
@@ -37,9 +38,9 @@ struct sub_grid {
         grid = matrix<walker*>(data, Nx, Ny);
     }
 
-    void create_walker(int xp, int yp) {
+    void create_walker(int xp, int yp, int index) {
         check_out_of_bounds_error(xp,yp);
-        walker* new_walker = new walker(xp,yp);
+        walker* new_walker = new walker(xp,yp, index);
         grid[xp][yp] = new_walker;
     }
     
@@ -284,7 +285,7 @@ int main(int argc, char* argv[]) {
 
     sub_grid my_grid;
     initialize_grid(Lx, Ly, world_size, world_rank, my_grid);
-    my_grid.create_walker(2,2);
+    my_grid.create_walker(2,2, world_rank);
     for (int i = 0; i != 100; i++)
         my_grid.update();
     my_grid.display(world_size);
