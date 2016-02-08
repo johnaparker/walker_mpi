@@ -35,6 +35,8 @@ struct sub_grid {
     sub_grid(int Lx, int Ly, int Nx, int Ny, int xc, int yc, int world_rank):
                         Lx(Lx), Ly(Ly), xc(xc), yc(yc), Nx(Nx), Ny(Ny), world_rank(world_rank) {
         walker** data = new walker*[Nx*Ny];
+        for(int i = 0; i != Nx*Ny; i++)
+            data[i] = nullptr;
         grid = matrix<walker*>(data, Nx, Ny);
     }
 
