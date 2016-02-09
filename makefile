@@ -1,12 +1,16 @@
-CC = mpic++
+CC = h5c++
 BUILD = ./build
 CCFLAGS = -std=c++11
 
 all: a.out
 
-a.out: $(BUILD)/main.o
-	$(CC) $(CCFLAGS) $(BUILD)/main.o -o a.out
+a.out: $(BUILD)/main.o $(BUILD)/h5out.o
+	$(CC) $(CCFLAGS) $(BUILD)/main.o  $(BUILD)/h5out.o -o a.out 
 
-$(BUILD)/main.o: main.cc
+$(BUILD)/main.o: main.cc h5out.cc
 	$(CC) $(CCFLAGS) -c main.cc
 	mv main.o $(BUILD)
+
+$(BUILD)/h5out.o: h5out.cc h5out.h
+	$(CC) $(CCFLAGS) -c h5out.cc
+	mv h5out.o $(BUILD)

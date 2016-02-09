@@ -6,8 +6,10 @@
 #include <vector>
 #include <algorithm>
 #include "matrix.h"
+//#include "h5out.h"
 
 using namespace std;
+//using namespace H5;
 
 struct walker {
     int x;
@@ -291,6 +293,13 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i != 100; i++)
         my_grid.update();
     my_grid.display(world_size);
+    //if (world_rank == 0) {
+        //h5out output("test.h5");
+        //output.create_node("0", {2}); 
+        //output.create_node("1", {2}); 
+        //output.create_node("2", {2}); 
+        //output.create_node("3", {2}); 
+    //}
 
     MPI_Finalize();
 }
