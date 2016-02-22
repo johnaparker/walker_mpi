@@ -30,6 +30,7 @@ void sub_grid::create_walker(int xp, int yp, int index) {
     check_out_of_bounds_error(xp,yp);
     walker* new_walker = new walker(xp,yp, index);
     grid[xp][yp] = new_walker;
+    current_walkers.push_back(new_walker);
 }
     
 vector<int> sub_grid::allowed_movements(int xp, int yp) {
@@ -246,6 +247,48 @@ void sub_grid::display(int world_size) {
         MPI_Send(&ready, 1, MPI_INT, world_rank+1, 0, MPI_COMM_WORLD);
 }
 
+void sub_grid::collect_at_main(int *wi, int *wx, int *wy, int world_size, int num_walkers) {
+    //int *wi, *wx, *wy;
+    int size = current_walkers.size();
+
+    if (world_rank != 0) {
+        wi = new int[size];
+        wx = new int[size];
+        wy = new int[size];
+        for (int i = 0; i != size; i++) {
+            wi[i] = current_walkers[i]->index;
+            wx[i] = current_walkers[i]->x;
+            wy[i] = current_walkers[i]->y;
+        }
+
+        MPI_Send(wi, size, MPI_INT, 0, 1, MPI_COMM_WORLD);     
+        delete [] wi;
+        MPI_Send(wx, size, MPI_INT, 0, 2, MPI_COMM_WORLD);     
+        delete [] wx;
+        MPI_Send(wy, size, MPI_INT, 0, 3, MPI_COMM_WORLD);     
+        delete [] wy;
+    }
+    else {
+
+        for (int i = 0; i != size; i++) {
+            wi[i] = current_walkers[i]->index;
+            wx[i] = current_walkers[i]->x;
+            wy[i] = current_walkers[i]->y;
+        }
+
+        for (int i = 1; i != world_size; i++) {
+            MPI_Status status;
+            int next_size;
+            MPI_Probe(i, 1, MPI_COMM_WORLD, &status);
+            MPI_Get_count(&status, MPI_INT, &next_size);
+            MPI_Recv(wi + size, next_size, MPI_INT, i, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(wx + size, next_size, MPI_INT, i, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(wy + size, next_size, MPI_INT, i, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            size += next_size;
+        }  
+    }
+}
+
 //void sub_grid::share(int to_rank, int xpos, int ypos) {
     //int* data;
     //data = {xpos, ypos};
@@ -261,3 +304,4 @@ void initialize_grid(int Lx, int Ly, int world_size, int world_rank, sub_grid & 
     int yc = (world_rank == 2 || world_rank == 3) ? Ny: 0;
     new_grid = sub_grid(Lx,Ly,Nx,Ny,xc,yc, world_rank);
 }
+

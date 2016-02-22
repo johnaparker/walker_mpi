@@ -1,3 +1,6 @@
+#ifndef grid_GUARD
+#define grid_GUARD
+
 #include <iostream>
 #include <mpi.h>
 #include <stdexcept>
@@ -24,6 +27,7 @@ struct walker {
 class sub_grid {
 public:
     matrix<walker*> grid;               //the grid of walker pointers. nullptr's are empty
+    std::vector<walker*> current_walkers;   //a list of walkers currently in this grid
     std::vector<walker*> moved_walkers; //a list of walkers that have been moved
     int xc, yc;                         //xc,yc = bottom left corner relative to the whole grid
     int Nx, Ny;                         //number of cells in each direction
@@ -53,10 +57,13 @@ public:
     bool check_out_of_bounds(int xp, int yp) const;  //check if position is out of sub-grid
     void check_out_of_bounds_error(int xp, int yp) const;  //above, but throw an error
 
-
+    //outputing and sharing positions 
     void display(int world_size);  //display the positions of all walkers
+    void collect_at_main(int* wi, int* wx, int* wy, int world_size, int num_walkers);
     //void share(int to_rank, int xpos, int ypos);  //share the information at position x,y with rank to_rank
 };
 
 //Initialize sub_grid for a given worl_rank
 void initialize_grid(int Lx, int Ly, int world_size, int world_rank, sub_grid & new_grid);
+
+#endif
