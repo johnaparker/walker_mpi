@@ -1,4 +1,6 @@
 a.out
 .*.sw*
+*.o
+*.h5
 
 build/

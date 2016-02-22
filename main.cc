@@ -6,16 +6,17 @@
 #include <vector>
 #include <algorithm>
 #include "matrix.h"
-//#include "h5out.h"
+#include "h5out.h"
 
 using namespace std;
-//using namespace H5;
+using namespace H5;
 
+//a walker moves randomly on a 2D grid
 struct walker {
     int x;
     int y;
-    bool moved;
-    int index;
+    bool moved;         //has the walker been moved for the given timestep
+    int index;          //unique index
 
     walker(int x, int y, int index): x(x), y(y), index(index), moved(false) {};
     void move(int dx, int dy) {
@@ -25,15 +26,17 @@ struct walker {
     }
 };
 
+//the grid upon which walkers move
 struct sub_grid {
-    matrix<walker*> grid;
-    vector<walker*> moved_walkers;
-    int xc, yc;
-    int Nx, Ny;
+    matrix<walker*> grid;          //the grid of walker pointers. nullptr's are empty
+    vector<walker*> moved_walkers; //a list of walkers that have been moved
+    int xc, yc;                    //xc,yc = bottom left corner relative to the whole grid
+    int Nx, Ny;                    //number of cells in each direction
     int world_rank;
-    int Lx, Ly;
+    int Lx, Ly;                    //number of cells in each direction for the whole grid
 
     sub_grid() = default;
+    //initialize an empty grid
     sub_grid(int Lx, int Ly, int Nx, int Ny, int xc, int yc, int world_rank):
                         Lx(Lx), Ly(Ly), xc(xc), yc(yc), Nx(Nx), Ny(Ny), world_rank(world_rank) {
         walker** data = new walker*[Nx*Ny];
@@ -42,12 +45,14 @@ struct sub_grid {
         grid = matrix<walker*>(data, Nx, Ny);
     }
 
+    //create new walker at given (relative) position.
     void create_walker(int xp, int yp, int index) {
         check_out_of_bounds_error(xp,yp);
         walker* new_walker = new walker(xp,yp, index);
         grid[xp][yp] = new_walker;
     }
     
+    //determine the allowed movements a walker can make
     vector<int> allowed_movements(int xp, int yp) {
         //0 bottom, 1 right, 2 top, 3 left, -1 interior
         vector<int> movements;
@@ -97,6 +102,7 @@ struct sub_grid {
     }
 
     
+    //move the walker at this position
     void move_walker(int xp, int yp) {
         walker* cur_walker = grid[xp][yp];
         if (cur_walker == nullptr)
@@ -129,6 +135,7 @@ struct sub_grid {
     }
 
 
+    //loop through grid, moving any walkers
     void update() {
         for (int i = 0; i != Nx; i++) {
             for (int j = 0; j != Ny; j++) {
@@ -138,12 +145,14 @@ struct sub_grid {
         reset_moved_walkers();
     }
 
+    //resset the moved boolean after all walkers have been moved
     void reset_moved_walkers() {
         for (auto & w: moved_walkers)
             w->moved = false;
         moved_walkers.clear();
     }
 
+    //determine whether a point lies on a shared border
     bool on_shared_border(int xp, int yp, vector<bool>& dirs) {
         //dirs: false means outer border. True means shared border if returns true
         bool on_sub_border, on_main_border;
@@ -175,6 +184,7 @@ struct sub_grid {
         return false; 
     }
 
+    //determine whether a point is on the border of the subgrid
     bool on_my_border(int xp, int yp, int& locx, int& locy) {
         if (xp == 0) {
             locx = 3;
@@ -197,6 +207,7 @@ struct sub_grid {
         return false;
     }
 
+    //determine whether a point is on the border of the whole grid
     bool on_outer_border(int xp, int yp, int& locx, int& locy) const {
         //0 bottom, 1 right, 2 top, 3 left, -1 interior
         int x = xp + xc;
@@ -222,6 +233,7 @@ struct sub_grid {
         return false;
     }
 
+    //determine whether a walker is allowed to move to this position
     bool valid_pos(int xp, int yp) {
         if (check_out_of_bounds(xp,yp))
             return false; 
@@ -230,23 +242,27 @@ struct sub_grid {
         return true;
     }
 
+    //determine if this position is occupied
     bool occupied(int xp, int yp) {
         if (grid[xp][yp] == nullptr)
             return false;
         return true;
     }
 
+    //check if position is out of sub-grid
     bool check_out_of_bounds(int xp, int yp) const{
         if (xp < 0 || xp > Nx-1 || yp < 0 || yp > Ny-1)
             return true;
         return false;
     }
 
+    //above, but throw an error
     void check_out_of_bounds_error(int xp, int yp) const{
         if (check_out_of_bounds(xp,yp))
             throw invalid_argument("new walker position is out of bounds");
     }
 
+    //display the positions of all walkers
     void display(int world_size) {
         int ready = 0;
         if (world_rank != 0)
@@ -264,6 +280,15 @@ struct sub_grid {
         if (world_rank != world_size-1)
             MPI_Send(&ready, 1, MPI_INT, world_rank+1, 0, MPI_COMM_WORLD);
     }
+
+    //share the information at position x,y with rank to_rank
+    //void share(int to_rank, int xpos, int ypos) {
+        //int* data;
+        //data = {xpos, ypos};
+        //int index = grid[xpos][ypos]->index;
+        //MPI_Isend(data, 2, MPI_INT, 0, 1, MPI_COMM_WORLD);
+        
+    //}
 };
 
 void initialize_grid(int Lx, int Ly, int world_size, int world_rank, sub_grid & new_grid) {
@@ -293,14 +318,16 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i != 100; i++)
         my_grid.update();
     my_grid.display(world_size);
-    //if (world_rank == 0) {
-        //h5out output("test.h5");
-        //output.create_node("0", {2}); 
-        //output.create_node("1", {2}); 
-        //output.create_node("2", {2}); 
-        //output.create_node("3", {2}); 
-    //}
 
+    if (world_rank == 0) {
+        h5out output("test.h5");
+        output.create_node("0", {2}); 
+        output.create_node("1", {2}); 
+        output.create_node("2", {2}); 
+        output.create_node("3", {2}); 
+    }
+    
+    
     MPI_Finalize();
 }
 
