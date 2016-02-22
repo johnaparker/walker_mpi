@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     initialize_grid(Lx, Ly, world_size, world_rank, my_grid);
     my_grid.create_walker(2,2, world_rank);
 
-    h5out* output;
+    h5out* output = nullptr;
     if (world_rank == 0) {
         output= new h5out("test.h5");
         for (int j = 0; j != num_walkers; j++) {
