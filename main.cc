@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
     wx = new int[num_walkers];
     wy = new int[num_walkers];
 
-    for (int i = 0; i != 10; i++) {
+    for (int i = 0; i != 500; i++) {
         my_grid.update();
         my_grid.collect_at_main(wi, wx, wy, world_size, num_walkers);
         if (world_rank == 0) {
@@ -52,8 +52,9 @@ int main(int argc, char* argv[]) {
             } 
         }
     }
+    delete output;
     my_grid.display(world_size);
-
+    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
 }
 
