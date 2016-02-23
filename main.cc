@@ -15,6 +15,7 @@ int main(int argc, char* argv[]) {
     int Lx = 10;
     int Ly = 10;
     const int num_walkers = 4;
+    int T = 15;
 
     sub_grid my_grid;
     initialize_grid(Lx, Ly, world_size, world_rank, my_grid);
@@ -36,11 +37,9 @@ int main(int argc, char* argv[]) {
     wx = new int[num_walkers];
     wy = new int[num_walkers];
 
-    for (int i = 0; i != 500; i++) {
-        my_grid.update();
+    for (int i = 0; i != T; i++) {
         my_grid.collect_at_main(wi, wx, wy, world_size, num_walkers);
-        if (world_rank == 0) {
-            for (int j = 0; j != num_walkers; j++) {
+        if (world_rank == 0) { for (int j = 0; j != num_walkers; j++) {
                 double* data = new double[2];
                 data[0] = wx[j];
                 data[1] = wy[j];
@@ -51,9 +50,10 @@ int main(int argc, char* argv[]) {
                 delete data;
             } 
         }
+        my_grid.update();
     }
+my_grid.display(world_size);
     delete output;
-    my_grid.display(world_size);
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
 }

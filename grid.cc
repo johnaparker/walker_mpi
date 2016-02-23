@@ -15,6 +15,7 @@ using namespace H5;
 void walker::move(int dx, int dy) {
     x += dx;
     y += dy;
+    moved = true;
 }
 
 
@@ -55,6 +56,13 @@ vector<int> sub_grid::allowed_movements(int xp, int yp) {
             if (locy_out != 2)
                 movements.push_back(2);
         }
+        else {
+            if (grid[xp][yp+1] == nullptr)
+                movements.push_back(2);
+            if (grid[xp][yp-1] == nullptr)
+                movements.push_back(0);
+        }
+        
         if (locx == 1) {
             if (grid[xp-1][yp] == nullptr)
                 movements.push_back(3);
@@ -67,7 +75,14 @@ vector<int> sub_grid::allowed_movements(int xp, int yp) {
             if (locx_out != 3)
                 movements.push_back(3);
         }
+        else {
+            if (grid[xp-1][yp] == nullptr)
+                movements.push_back(3);
+            if (grid[xp+1][yp] == nullptr)
+                movements.push_back(1);
+        }
     }
+    
     else {
         if (grid[xp+1][yp] == nullptr)
             movements.push_back(1);
@@ -158,50 +173,52 @@ bool sub_grid::on_shared_border(int xp, int yp, vector<bool>& dirs) {
 }
 
 bool sub_grid::on_my_border(int xp, int yp, int& locx, int& locy) {
+    bool ret = false;
     if (xp == 0) {
         locx = 3;
-        return true;
+        ret = true;
     }
-    else if (xp == Nx) {
+    else if (xp == Nx-1) {
         locx = 1;
-        return true;
+        ret = true;
     }
     else locx = -1;
     if (yp == 0) {
         locy = 0;
-        return true;
+        ret = true;
     }
-    else if (yp == Ny) {
+    else if (yp == Ny-1) {
         locy = 2;
-        return true;
+        ret = true;
     }
     else locy= -1;
-    return false;
+    return ret;
 }
 
 bool sub_grid::on_outer_border(int xp, int yp, int& locx, int& locy) const {
     //0 bottom, 1 right, 2 top, 3 left, -1 interior
+    bool ret = false;
     int x = xp + xc;
     int y = yp + yc;
     if (x == 0) {
         locx = 3;
-        return true;
+        ret = true;
     }
     else if (x == Lx) {
         locx = 1;
-        return true;
+        ret = true;
     }
     else locx = -1;
     if (y == 0) {
         locy = 0;
-        return true;
+        ret = true;
     }
     else if (y == Ly) {
         locy = 2;
-        return true;
+        ret = true;
     }
     else locy= -1;
-    return false;
+    return ret;
 }
 
 bool sub_grid::valid_pos(int xp, int yp) {
@@ -257,8 +274,8 @@ void sub_grid::collect_at_main(int *wi, int *wx, int *wy, int world_size, int nu
         wy = new int[size];
         for (int i = 0; i != size; i++) {
             wi[i] = current_walkers[i]->index;
-            wx[i] = current_walkers[i]->x;
-            wy[i] = current_walkers[i]->y;
+            wx[i] = current_walkers[i]->x+xc;
+            wy[i] = current_walkers[i]->y+yc;
         }
 
         MPI_Send(wi, size, MPI_INT, 0, 1, MPI_COMM_WORLD);     
@@ -272,8 +289,8 @@ void sub_grid::collect_at_main(int *wi, int *wx, int *wy, int world_size, int nu
 
         for (int i = 0; i != size; i++) {
             wi[i] = current_walkers[i]->index;
-            wx[i] = current_walkers[i]->x;
-            wy[i] = current_walkers[i]->y;
+            wx[i] = current_walkers[i]->x+xc;
+            wy[i] = current_walkers[i]->y+yc;
         }
 
         for (int i = 1; i != world_size; i++) {
