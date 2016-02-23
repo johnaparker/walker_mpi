@@ -1,0 +1,1 @@
+It looks like walkers are getting stuck on the outer edge (not touching a shared boundary) when they should have available movements
