@@ -14,12 +14,15 @@ int main(int argc, char* argv[]) {
     srand(time(NULL)+world_rank);       
     int Lx = 10;
     int Ly = 10;
-    const int num_walkers = 4;
-    int T = 15;
+    const int num_walkers = 16;
+    int T = 150;
 
     sub_grid my_grid;
     initialize_grid(Lx, Ly, world_size, world_rank, my_grid);
     my_grid.create_walker(2,2, world_rank);
+    my_grid.create_walker(2,3, world_rank+world_size);
+    my_grid.create_walker(3,2, world_rank+2*world_size);
+    my_grid.create_walker(3,3, world_rank+3*world_size);
 
     h5out* output = nullptr;
     if (world_rank == 0) {
