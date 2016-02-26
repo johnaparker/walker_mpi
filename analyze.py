@@ -58,7 +58,7 @@ def video(data, Tf = None):
             line.set_ydata(data[j,1,i-1:i])
         return lines
     ani = animation.FuncAnimation(fig, animate, np.arange(1,Tf), interval=300,
-            blit=True)
+            blit=False)
     
     py.show()
 
