@@ -21,10 +21,9 @@ void logger::log() {
 
 void logger::print() {
     if (!has_moved) {
-        vector<bool> a;
         int x = wp->x + gridp->xc;
         int y = wp->y + gridp->yc;
-        if (gridp->on_shared_border(wp->x, wp->y, a))
+        if (gridp->on_shared_border(wp->x, wp->y))
             return;
 
         cout << "Walker " << wp->index << " has not moved, at postiion " << "(" << x  << ","

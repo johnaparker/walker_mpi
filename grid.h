@@ -49,8 +49,11 @@ public:
 
     //determining the border
     bool on_shared_border(int xp, int yp, std::vector<bool>& dirs);  //determine whether a point lies on a shared border
+    bool on_shared_border(int xp, int yp); 
     bool on_my_border(int xp, int yp, int& locx, int& locy);  //determine whether a point is on the border of the subgrid
+    bool on_my_border(int xp, int yp);
     bool on_outer_border(int xp, int yp, int& locx, int& locy) const;  //determine whether a point is on the border of the whole grid
+    bool on_outer_border(int xp, int yp) const;
 
     //probing a space
     bool valid_pos(int xp, int yp);  //determine whether a walker is allowed to move to this position

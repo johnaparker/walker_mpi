@@ -60,7 +60,7 @@ def video(data,Ti = None, Tf = None):
             line.set_xdata(data[j,0,i:i+1])
             line.set_ydata(data[j,1,i:i+1])
         return lines
-    ani = animation.FuncAnimation(fig, animate, np.arange(Ti,Tf), interval=5000,
+    ani = animation.FuncAnimation(fig, animate, np.arange(Ti,Tf), interval=300,
             blit=False)
     
     py.show()
@@ -73,5 +73,5 @@ if __name__ == "__main__":
     filename = "test.h5"
     data = get_data(filename, num_walkers)
     plot_trajectories(data,20)
-    # video(data)
-    video(data, 90, 96)
+    video(data)
+    # video(data, 90, 96)

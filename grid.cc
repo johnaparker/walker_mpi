@@ -126,11 +126,8 @@ void sub_grid::move_walker(int xp, int yp) {
 }
 
 void sub_grid::update() {
-    for (int i = 0; i != Nx; i++) {
-        for (int j = 0; j != Ny; j++) {
-            move_walker(i,j);
-        }
-    }
+    for (const auto& w: current_walkers)
+        move_walker(w->x,w->y);
     reset_moved_walkers();
     tStep += 1;
 }
@@ -173,6 +170,11 @@ bool sub_grid::on_shared_border(int xp, int yp, vector<bool>& dirs) {
     return false; 
 }
 
+bool sub_grid::on_shared_border(int xp, int yp) {
+    vector<bool> dirs;
+    return on_shared_border(xp,yp,dirs);
+}
+
 bool sub_grid::on_my_border(int xp, int yp, int& locx, int& locy) {
     bool ret = false;
     if (xp == 0) {
@@ -194,6 +196,11 @@ bool sub_grid::on_my_border(int xp, int yp, int& locx, int& locy) {
     }
     else locy= -1;
     return ret;
+}
+
+bool sub_grid::on_my_border(int xp, int yp) {
+    int a,b;
+    return on_my_border(xp,yp,a,b);
 }
 
 bool sub_grid::on_outer_border(int xp, int yp, int& locx, int& locy) const {
@@ -220,6 +227,11 @@ bool sub_grid::on_outer_border(int xp, int yp, int& locx, int& locy) const {
     }
     else locy= -1;
     return ret;
+}
+
+bool sub_grid::on_outer_border(int xp, int yp) const {
+    int a,b;
+    return on_outer_border(xp,yp,a,b);
 }
 
 bool sub_grid::valid_pos(int xp, int yp) {
