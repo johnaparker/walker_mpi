@@ -1,0 +1,5 @@
+When a walker decides to move into another region, print the rank of the region its going to
+
+Add functions to convert local postions to global positons and vice versa
+
+Use these ideas combined to send walkers between regions
