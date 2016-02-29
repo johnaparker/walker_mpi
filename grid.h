@@ -33,6 +33,7 @@ public:
     int Nx, Ny;                         //number of cells in each direction
     int world_rank;
     int Lx, Ly;                         //number of cells in each direction for the whole grid
+    int tStep;                          //current number of steps taken
 
 public: 
     //constructors

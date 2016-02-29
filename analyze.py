@@ -35,7 +35,7 @@ def plot_trajectories(data, Tf = None):
         py.plot(x[-1],y[-1],'b*')
 
 
-def video(data, Tf = None):
+def video(data,Ti = None, Tf = None):
     fig, ax = py.subplots()
     py.xlim([-.5,9.5])
     py.ylim([-.5,9.5])
@@ -43,21 +43,24 @@ def video(data, Tf = None):
     py.axhline(yc[2]-.5, color='black', linestyle="--")
 
     if Tf == None:
-        Tf = data.shape[2]
+        Tf = data.shape[2]-1
+    if Ti == None:
+        Ti = 0
 
     lines = []
     for i in range(num_walkers):
-        x = data[i,0,:1] 
-        y = data[i,1,:1]
+        x = data[i,0,Ti:Ti+1] 
+        y = data[i,1,Tf:Tf+1]
         line, = py.plot(x,y, 'o')
         lines.append(line)
 
     def animate(i): 
+        py.title(i)
         for j,line in enumerate(lines):
-            line.set_xdata(data[j,0,i-1:i])
-            line.set_ydata(data[j,1,i-1:i])
+            line.set_xdata(data[j,0,i:i+1])
+            line.set_ydata(data[j,1,i:i+1])
         return lines
-    ani = animation.FuncAnimation(fig, animate, np.arange(1,Tf), interval=300,
+    ani = animation.FuncAnimation(fig, animate, np.arange(Ti,Tf), interval=5000,
             blit=False)
     
     py.show()
@@ -70,4 +73,5 @@ if __name__ == "__main__":
     filename = "test.h5"
     data = get_data(filename, num_walkers)
     plot_trajectories(data,20)
-    video(data)
+    # video(data)
+    video(data, 90, 96)

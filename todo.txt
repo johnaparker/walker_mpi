@@ -1,1 +1,5 @@
 It looks like walkers are getting stuck on the outer edge (not touching a shared boundary) when they should have available movements
+
+Loop through walkers instead of grid points
+
+Overload border determination functions so that locx, locy etc. dont need to be passed in

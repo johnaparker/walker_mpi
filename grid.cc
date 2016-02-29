@@ -20,7 +20,7 @@ void walker::move(int dx, int dy) {
 
 
 sub_grid::sub_grid(int Lx, int Ly, int Nx, int Ny, int xc, int yc, int world_rank):
-                        Lx(Lx), Ly(Ly), xc(xc), yc(yc), Nx(Nx), Ny(Ny), world_rank(world_rank) {
+                        Lx(Lx), Ly(Ly), xc(xc), yc(yc), Nx(Nx), Ny(Ny), world_rank(world_rank), tStep(0) {
     walker** data = new walker*[Nx*Ny];
     for(int i = 0; i != Nx*Ny; i++)
         data[i] = nullptr;
@@ -132,6 +132,7 @@ void sub_grid::update() {
         }
     }
     reset_moved_walkers();
+    tStep += 1;
 }
 
     //resset the moved boolean after all walkers have been moved
@@ -164,8 +165,8 @@ bool sub_grid::on_shared_border(int xp, int yp, vector<bool>& dirs) {
     int x = xp + xc;
     int y = yp + yc;
     
-    if ((xp == 0 && yp == 0) || (xp == 0 && yp == Ny) || (xp == Nx && yp == 0) || (xp == Nx && yp == Ny)) {
-        if ((x == 0 && y == 0) || (x == 0 && y == Ly) || (x == Lx && y == 0) || (x == Lx && y == Ly))
+    if ((xp == 0 && yp == 0) || (xp == 0 && yp == Ny-1) || (xp == Nx-1 && yp == 0) || (xp == Nx-1 && yp == Ny-1)) {
+        if ((x == 0 && y == 0) || (x == 0 && y == Ly-1) || (x == Lx-1 && y == 0) || (x == Lx-1 && y == Ly-1))
             return false;
         return true;
     }
@@ -204,7 +205,7 @@ bool sub_grid::on_outer_border(int xp, int yp, int& locx, int& locy) const {
         locx = 3;
         ret = true;
     }
-    else if (x == Lx) {
+    else if (x == Lx-1) {
         locx = 1;
         ret = true;
     }
@@ -213,7 +214,7 @@ bool sub_grid::on_outer_border(int xp, int yp, int& locx, int& locy) const {
         locy = 0;
         ret = true;
     }
-    else if (y == Ly) {
+    else if (y == Ly-1) {
         locy = 2;
         ret = true;
     }

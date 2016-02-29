@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     int Lx = 10;
     int Ly = 10;
     const int num_walkers = 16;
-    int T = 5;
+    int T = 500;
 
     sub_grid my_grid;
     initialize_grid(Lx, Ly, world_size, world_rank, my_grid);
@@ -25,10 +25,10 @@ int main(int argc, char* argv[]) {
     my_grid.create_walker(3,2, world_rank+2*world_size);
     my_grid.create_walker(3,3, world_rank+3*world_size);
 
-    logger l1(*my_grid.grid[2][2]);
-    logger l2(*my_grid.grid[2][2]);
-    logger l3(*my_grid.grid[2][2]);
-    logger l4(*my_grid.grid[2][2]);
+    logger l1(*my_grid.grid[2][2], my_grid);
+    logger l2(*my_grid.grid[2][3], my_grid);
+    logger l3(*my_grid.grid[3][2], my_grid);
+    logger l4(*my_grid.grid[3][3], my_grid);
 
     h5out* output = nullptr;
     if (world_rank == 0) {

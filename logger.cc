@@ -1,10 +1,11 @@
 #include <iostream>
 #include "logger.h"
 #include "grid.h"
+#include <vector>
 
 using namespace std;
 
-logger::logger(walker& w): wp(&w), prev_x(w.x), prev_y(w.y), has_moved(true) {};
+logger::logger(walker& w, sub_grid& grid): wp(&w), gridp(&grid), prev_x(w.x), prev_y(w.y), has_moved(true) {};
 
 void logger::log() {
     int x = wp->x;
@@ -20,7 +21,13 @@ void logger::log() {
 
 void logger::print() {
     if (!has_moved) {
-        cout << "Walker " << wp->index << " has not moved, at postiion " << "(" << wp->x  << ","
-            << wp->y << ")" <<endl;
+        vector<bool> a;
+        int x = wp->x + gridp->xc;
+        int y = wp->y + gridp->yc;
+        if (gridp->on_shared_border(wp->x, wp->y, a))
+            return;
+
+        cout << "Walker " << wp->index << " has not moved, at postiion " << "(" << x  << ","
+            << y << ")" << " at time " << gridp->tStep << endl;
     }
 }
