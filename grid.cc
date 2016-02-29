@@ -31,7 +31,7 @@ void sub_grid::create_walker(int xp, int yp, int index) {
     check_out_of_bounds_error(xp,yp);
     walker* new_walker = new walker(xp,yp, index);
     grid[xp][yp] = new_walker;
-    current_walkers.push_back(new_walker);
+    current_walkers[index] = new_walker;
 }
     
 vector<int> sub_grid::allowed_movements(int xp, int yp) {
@@ -126,13 +126,23 @@ void sub_grid::move_walker(int xp, int yp) {
 }
 
 void sub_grid::update() {
-    for (const auto& w: current_walkers)
-        move_walker(w->x,w->y);
+    for (const auto& w: current_walkers) {
+        move_walker(w.second->x,w.second->y);
+    }
     reset_moved_walkers();
     tStep += 1;
 }
 
-    //resset the moved boolean after all walkers have been moved
+void sub_grid::remove(int xp, int yp) {
+    if (!occupied(xp,yp))
+        throw invalid_argument("Nothing to remove at this position");
+    walker* wp = grid[xp][yp];
+    current_walkers.erase(wp->index);
+    delete wp;
+    grid[xp][yp] = nullptr;  
+}
+
+//resset the moved boolean after all walkers have been moved
 void sub_grid::reset_moved_walkers() {
     for (auto & w: moved_walkers)
         w->moved = false;
@@ -280,15 +290,18 @@ void sub_grid::display(int world_size) {
 void sub_grid::collect_at_main(int *wi, int *wx, int *wy, int world_size, int num_walkers) {
     //int *wi, *wx, *wy;
     int size = current_walkers.size();
+    int i = 0;
 
     if (world_rank != 0) {
         wi = new int[size];
         wx = new int[size];
         wy = new int[size];
-        for (int i = 0; i != size; i++) {
-            wi[i] = current_walkers[i]->index;
-            wx[i] = current_walkers[i]->x+xc;
-            wy[i] = current_walkers[i]->y+yc;
+        for (const auto& walker_i: current_walkers) {
+            const walker& w = *walker_i.second;
+            wi[i] = w.index;
+            wx[i] = w.x+xc;
+            wy[i] = w.y+yc;
+            i++;
         }
 
         MPI_Send(wi, size, MPI_INT, 0, 1, MPI_COMM_WORLD);     
@@ -299,33 +312,40 @@ void sub_grid::collect_at_main(int *wi, int *wx, int *wy, int world_size, int nu
         delete [] wy;
     }
     else {
-
-        for (int i = 0; i != size; i++) {
-            wi[i] = current_walkers[i]->index;
-            wx[i] = current_walkers[i]->x+xc;
-            wy[i] = current_walkers[i]->y+yc;
+        for (const auto& walker_i: current_walkers) {
+            const walker& w = *walker_i.second;
+            wi[i] = w.index;
+            wx[i] = w.x+xc;
+            wy[i] = w.y+yc;
+            i++;
         }
 
-        for (int i = 1; i != world_size; i++) {
+        for (int j = 1; j != world_size; j++) {
             MPI_Status status;
             int next_size;
-            MPI_Probe(i, 1, MPI_COMM_WORLD, &status);
+            MPI_Probe(j, 1, MPI_COMM_WORLD, &status);
             MPI_Get_count(&status, MPI_INT, &next_size);
-            MPI_Recv(wi + size, next_size, MPI_INT, i, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Recv(wx + size, next_size, MPI_INT, i, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Recv(wy + size, next_size, MPI_INT, i, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(wi + size, next_size, MPI_INT, j, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(wx + size, next_size, MPI_INT, j, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(wy + size, next_size, MPI_INT, j, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             size += next_size;
         }  
     }
 }
 
-//void sub_grid::share(int to_rank, int xpos, int ypos) {
-    //int* data;
-    //data = {xpos, ypos};
-    //int index = grid[xpos][ypos]->index;
-    //MPI_Isend(data, 2, MPI_INT, 0, 1, MPI_COMM_WORLD);
-    
-//}
+void sub_grid::share(int to_rank, int xpos, int ypos) {
+    if (!occupied(xpos,ypos))
+        throw invalid_argument("Nothing to share at this position");
+    int index = grid[xpos][ypos]->index;
+    int data[] = {xpos, ypos, index};
+    MPI_Send(&data, 3, MPI_INT, to_rank, 4, MPI_COMM_WORLD);
+    remove(xpos, ypos);
+}
+
+void sub_grid::receive(int from_rank) {
+    int *data;
+    MPI_Recv(data, 3, MPI_INT, from_rank, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+}
 
 void initialize_grid(int Lx, int Ly, int world_size, int world_rank, sub_grid & new_grid) {
     int Nx = Lx/2;

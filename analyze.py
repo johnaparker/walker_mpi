@@ -69,7 +69,7 @@ def video(data,Ti = None, Tf = None):
 
 
 if __name__ == "__main__":
-    num_walkers = 16
+    num_walkers = 1
     filename = "test.h5"
     data = get_data(filename, num_walkers)
     plot_trajectories(data,20)

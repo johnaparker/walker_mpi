@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <vector>
+#include <map>
 #include <algorithm>
 #include "matrix.h"
 #include "h5out.h"
@@ -27,7 +28,7 @@ struct walker {
 class sub_grid {
 public:
     matrix<walker*> grid;               //the grid of walker pointers. nullptr's are empty
-    std::vector<walker*> current_walkers;   //a list of walkers currently in this grid
+    std::map<int, walker*> current_walkers;   //a map of walkers currently in this grid
     std::vector<walker*> moved_walkers; //a list of walkers that have been moved
     int xc, yc;                         //xc,yc = bottom left corner relative to the whole grid
     int Nx, Ny;                         //number of cells in each direction
@@ -46,6 +47,7 @@ public:
     std::vector<int> allowed_movements(int xp, int yp);  //determine the allowed movements a walker can make
     void update();  //loop through grid, moving any walkers
     void reset_moved_walkers();   //resset the moved boolean after all walkers have been moved
+    void remove(int xp, int yp);  //remove walker at positon xp,yp
 
     //determining the border
     bool on_shared_border(int xp, int yp, std::vector<bool>& dirs);  //determine whether a point lies on a shared border
@@ -64,7 +66,8 @@ public:
     //outputing and sharing positions 
     void display(int world_size);  //display the positions of all walkers
     void collect_at_main(int* wi, int* wx, int* wy, int world_size, int num_walkers);
-    //void share(int to_rank, int xpos, int ypos);  //share the information at position x,y with rank to_rank
+    void share(int to_rank, int xpos, int ypos);  //share the information at position x,y with rank to_rank
+    void receive(int from_rank);  //receive infromation from an adjacent rank
 };
 
 //Initialize sub_grid for a given worl_rank
